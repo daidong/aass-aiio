@@ -16,7 +16,7 @@ done
 PRGDIR=`dirname "$PRG"`
 [ -z "$PROCESSOR_HOME" ] && PROCESSOR_HOME=`cd "$PRGDIR/.." ; pwd`
 
-SERVER_NAME=iogp
+APP_NAME=AIIO
 
 # path
 BIN_PATH=$PROCESSOR_HOME/bin
@@ -27,7 +27,10 @@ mkdir -p $LOG_PATH
 touch $LOG_PATH/stdout.log
 
 #
-CLASS_NAME=edu.ttu.aass.aiio.AIIOMain
+CLASS_NAME_AIIO=edu.ttu.aass.aiio.AIIOMain
+CLASS_NAME_SORT=edu.tt.aass.aiio.dataspace.YahooHDFSSort
+CLASS_NAME_WORD2VEC=edu.tt.aass.aiio.vectorize.YahooHDFSFile2Vec
+
 CLASS_PATH=$PROCESSOR_HOME/conf
 #
 for f in $LIB_PATH/*.jar
@@ -39,4 +42,14 @@ DEBUG_ARGS="";
 #
 PROGRAM_ARGS="-Xms8g -Xmx8g -Dapp.name=${SERVER_NAME} -Dapp.base=${PROCESSOR_HOME} -XX:+UseConcMarkSweepGC -server -XX:SurvivorRatio=5 -XX:CMSInitiatingOccupancyFraction=80 -XX:+PrintTenuringDistribution  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime ${DEBUG_ARGS} -Xloggc:./gc.log"
 
-java $PROGRAM_ARGS -classpath $CLASS_PATH $CLASS_NAME $@
+if [ "AIIO" = $1 ]; then
+	java $PROGRAM_ARGS -classpath $CLASS_PATH $CLASS_NAME_AIIO ${@:2}
+fi
+
+if [ "SORT" = $1 ]; then
+	java $PROGRAM_ARGS -classpath $CLASS_PATH $CLASS_NAME_SORT ${@:2}
+fi
+
+if [ "WORD2VEC" = $1 ]; then
+	java $PROGRAM_ARGS -classpath $CLASS_PATH $CLASS_NAME_WORD2VEC ${@:2}
+fi
