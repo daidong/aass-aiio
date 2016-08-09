@@ -1,9 +1,12 @@
-package edu.tt.aass.aiio.dataspace;
+package edu.ttu.aass.aiio.dataspace;
 
 import org.deeplearning4j.text.sentenceiterator.SentenceIterator;
 import org.deeplearning4j.text.sentenceiterator.SentencePreProcessor;
 
 import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 
 /**
@@ -18,10 +21,14 @@ public class YahooHDFSIterator implements SentenceIterator, Iterable<String>{
 
 	private BufferedReader reader;
 	private InputStream backendStream;
+	private long ts;
+	private int words;
 
 	public YahooHDFSIterator(String filePath) throws FileNotFoundException {
 		this.backendStream = new FileInputStream(filePath);
 		this.reader = new BufferedReader(new InputStreamReader(new BufferedInputStream(this.backendStream, 10 * 1024 * 1024)));
+		this.ts = 0L;
+		this.words = 0;
 	}
 
 	@Override
@@ -48,6 +55,37 @@ public class YahooHDFSIterator implements SentenceIterator, Iterable<String>{
 
 	@Override
 	public String nextSentence() {
+		try {
+			StringBuilder sb = new StringBuilder();
+			String line;
+			while ((line = reader.readLine()) != null){
+				String fs[] = line.split("\t");
+				String time = fs[0] + " " + fs[1];
+				String fileId = fs[7];
+
+				//2010-01-12	00:00:00,004
+				String timePattern = "yyyy-MM-dd HH:mm:ss,SSS";
+				SimpleDateFormat format = new SimpleDateFormat(timePattern);
+
+				Date date = format.parse(time);
+				long tmp = date.getTime();
+
+				if (((tmp - ts) > 1000 && ts != 0) || words > 1000){
+					this.ts = tmp;
+					this.words = 0;
+					return sb.toString();
+				}
+
+				sb.append(fileId + " ");
+				this.words += 1;
+				this.ts = tmp;
+			}
+			return null;
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
 		return null;
 	}
 
@@ -67,7 +105,8 @@ public class YahooHDFSIterator implements SentenceIterator, Iterable<String>{
 				((FileInputStream) backendStream).getChannel().position(0);
 			} else backendStream.reset();
 			reader = new BufferedReader(new InputStreamReader(new BufferedInputStream(backendStream, 10 * 1024 * 1024)));
-
+			this.ts = 0L;
+			this.words = 0;
 		} catch (Exception e){
 			throw new RuntimeException(e);
 		}
@@ -90,6 +129,5 @@ public class YahooHDFSIterator implements SentenceIterator, Iterable<String>{
 
 	@Override
 	public void setPreProcessor(SentencePreProcessor preProcessor) {
-
 	}
 }

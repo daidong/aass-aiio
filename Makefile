@@ -22,7 +22,7 @@ clean:
 .PHONY: install
 install:
 		# clean
-		cd $(JAVA_SRC_HOME) && mvn install;
+		cd $(JAVA_SRC_HOME) && mvn clean install;
 		mkdir -p release; mv target/*.tar.gz release/; cd release && tar zxf aiio-0.1-make-assembly.tar.gz;
 
 .PHONY: all

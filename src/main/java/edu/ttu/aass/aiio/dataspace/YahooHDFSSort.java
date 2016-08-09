@@ -1,4 +1,4 @@
-package edu.tt.aass.aiio.dataspace;
+package edu.ttu.aass.aiio.dataspace;
 
 import java.io.*;
 import java.text.ParseException;
@@ -7,6 +7,7 @@ import java.util.Date;
 
 /**
  * Created by daidong on 8/7/16.
+ * Current file is actually already sorted. Just Skip This.
  */
 public class YahooHDFSSort {
 
