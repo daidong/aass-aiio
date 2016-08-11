@@ -28,7 +28,6 @@ touch $LOG_PATH/stdout.log
 
 #
 CLASS_NAME_AIIO=edu.ttu.aass.aiio.AIIOMain
-CLASS_NAME_SORT=edu.ttu.aass.aiio.dataspace.YahooHDFSSort
 CLASS_NAME_WORD2VEC=edu.ttu.aass.aiio.vectorize.YahooHDFSFile2Vec
 CLASS_NAME_LSTM=edu.ttu.aass.aiio.lstm.YahooHDFSLSTM
 
