@@ -6,7 +6,10 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 
 /**
@@ -58,7 +61,7 @@ public class YahooHDFSLSTMVerify {
         }
     }
 
-    public void runVerify() throws IOException {
+    public void runVerify() throws IOException, NoSuchAlgorithmException {
         LowCasePreProcessor cp = new LowCasePreProcessor();
         String line;
         String predictedFile = "NONE";
@@ -66,13 +69,21 @@ public class YahooHDFSLSTMVerify {
         int total = 0;
 
         this.model.rnnClearPreviousState();
+        MessageDigest md = MessageDigest.getInstance("MD5");
 
         while ((line = reader.readLine()) != null){
             String fs[] = line.split("\t");
             String fileId = fs[7];
-            String currFile = cp.preProcess(fileId);
+            byte[] md5File = md.digest(fileId.getBytes("UTF-8"));
+            BigInteger bigInt = new BigInteger(1,md5File);
+            String hashtext = bigInt.toString(16);
+            while(hashtext.length() < 32 ){
+                hashtext = "0"+hashtext;
+            }
+            String currFile = hashtext;
             ByteBuffer crbb = ByteBuffer.wrap(currFile.getBytes());
             double[] crvector = this.vecs.get(crbb);
+
             if (crvector == null)
                 continue;
 

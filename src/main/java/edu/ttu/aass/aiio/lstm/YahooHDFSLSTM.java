@@ -21,6 +21,7 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 /**
@@ -49,7 +50,7 @@ public class YahooHDFSLSTM {
 	 * args[1] = YahooHDFS Vector Representation (from Word2Vec)
 	 * args[2] = YahooHDFS LSTM Network Serialization File
      */
-	public static void main(String args[]) throws IOException {
+	public static void main(String args[]) throws IOException, NoSuchAlgorithmException {
 
 		DataTypeUtil.setDTypeForContext(DataBuffer.Type.DOUBLE);
 

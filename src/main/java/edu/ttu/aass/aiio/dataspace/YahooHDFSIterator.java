@@ -4,6 +4,9 @@ import org.deeplearning4j.text.sentenceiterator.SentenceIterator;
 import org.deeplearning4j.text.sentenceiterator.SentencePreProcessor;
 
 import java.io.*;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -70,13 +73,20 @@ public class YahooHDFSIterator implements SentenceIterator, Iterable<String>{
 				Date date = format.parse(time);
 				long tmp = date.getTime();
 
-				if (((tmp - ts) > 1000 && ts != 0) || words > 1000){
+				if (((tmp - ts) > 1000 && ts != 0) || words > 10000){
 					this.ts = tmp;
 					this.words = 0;
 					return sb.toString();
 				}
 
-				sb.append(fileId + " ");
+				MessageDigest md = MessageDigest.getInstance("MD5");
+				byte[] md5File = md.digest(fileId.getBytes("UTF-8"));
+				BigInteger bigInt = new BigInteger(1,md5File);
+				String hashtext = bigInt.toString(16);
+				while(hashtext.length() < 32 ){
+					hashtext = "0"+hashtext;
+				}
+				sb.append(hashtext + " ");
 				this.words += 1;
 				this.ts = tmp;
 			}
@@ -84,6 +94,8 @@ public class YahooHDFSIterator implements SentenceIterator, Iterable<String>{
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ParseException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
 		return null;

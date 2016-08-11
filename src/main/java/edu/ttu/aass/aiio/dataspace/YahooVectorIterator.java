@@ -9,7 +9,10 @@ import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -87,11 +90,18 @@ public class YahooVectorIterator implements DataSetIterator {
 			String line;
 			LowCasePreProcessor cp = new LowCasePreProcessor();
 			boolean skipWord = false;
+			MessageDigest md = MessageDigest.getInstance("MD5");
 
 			while ((line = reader.readLine()) != null){
 				String fs[] = line.split("\t");
 				String fileId = fs[7];
-				String currFile = cp.preProcess(fileId);
+				byte[] md5File = md.digest(fileId.getBytes("UTF-8"));
+				BigInteger bigInt = new BigInteger(1,md5File);
+				String hashtext = bigInt.toString(16);
+				while(hashtext.length() < 32 ){
+					hashtext = "0"+hashtext;
+				}
+				String currFile = hashtext;
 
 				if (currentBatchIdx == miniBatch){
 					return new DataSet(input, labels);
@@ -138,6 +148,8 @@ public class YahooVectorIterator implements DataSetIterator {
 				}
 			}
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
 

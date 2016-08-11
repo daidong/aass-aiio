@@ -31,9 +31,9 @@ public class YahooHDFSFile2Vec {
 
 		log.info("Traning model...");
 		Word2Vec vec = new Word2Vec.Builder()
-				.minWordFrequency(10)
+				.minWordFrequency(0)
 				.iterations(3)
-				.layerSize(200)
+				.layerSize(100)
 				.seed(42)
 				.windowSize(10)
 				.iterate(iter)
