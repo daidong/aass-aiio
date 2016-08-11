@@ -1,6 +1,7 @@
 package edu.ttu.aass.aiio.dataspace;
 
 import org.deeplearning4j.text.tokenization.tokenizer.preprocessor.CommonPreprocessor;
+import org.deeplearning4j.text.tokenization.tokenizer.preprocessor.LowCasePreProcessor;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.DataSetPreProcessor;
@@ -84,7 +85,8 @@ public class YahooVectorIterator implements DataSetIterator {
 
 		try {
 			String line;
-			CommonPreprocessor cp = new CommonPreprocessor();
+			LowCasePreProcessor cp = new LowCasePreProcessor();
+			boolean skipWord = false;
 
 			while ((line = reader.readLine()) != null){
 				String fs[] = line.split("\t");
@@ -102,13 +104,33 @@ public class YahooVectorIterator implements DataSetIterator {
 					ByteBuffer crbb = ByteBuffer.wrap(currFile.getBytes());
 					double[] crvector = this.vecs.get(crbb);
 
-					for (int i = 0; i < vecSize; i++) {
-						input.putScalar(new int[]{currentBatchIdx, i, currentExampleIdx}, pfvector[i]);
-						labels.putScalar(new int[]{currentBatchIdx, i, currentExampleIdx}, crvector[i]);
+					/**
+					 * It is wired, even word2vec threshold is 0, there are still files that do not have vector
+					 * representations. Need to check the reason.
+					 * Now, we just skip those words.
+					 */
+					if (crvector != null) {
+						for (int i = 0; i < vecSize; i++) {
+							input.putScalar(new int[]{currentBatchIdx, i, currentExampleIdx - 1}, pfvector[i]);
+							labels.putScalar(new int[]{currentBatchIdx, i, currentExampleIdx - 1}, crvector[i]);
+						}
+					} else {
+						skipWord = true;
 					}
+				} else {
+					ByteBuffer crbb = ByteBuffer.wrap(currFile.getBytes());
+					double[] crvector = this.vecs.get(crbb);
+					if (crvector == null)
+						skipWord = true;
 				}
-				previousFile = currFile;
-				currentExampleIdx += 1;
+
+				if (!skipWord) {
+					previousFile = currFile;
+					currentExampleIdx += 1;
+				} else {
+					skipWord = false;
+					System.out.println("Skip Once");
+				}
 
 				if (currentExampleIdx == exampleLength){
 					currentBatchIdx += 1;
