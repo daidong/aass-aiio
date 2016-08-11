@@ -31,11 +31,11 @@ public class YahooHDFSFile2Vec {
 
 		log.info("Traning model...");
 		Word2Vec vec = new Word2Vec.Builder()
-				.minWordFrequency(0)
-				.iterations(1)
-				.layerSize(100)
+				.minWordFrequency(10)
+				.iterations(3)
+				.layerSize(200)
 				.seed(42)
-				.windowSize(5)
+				.windowSize(10)
 				.iterate(iter)
 				.tokenizerFactory(t)
 				.build();
