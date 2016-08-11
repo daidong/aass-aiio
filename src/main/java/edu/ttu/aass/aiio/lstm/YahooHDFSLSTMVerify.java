@@ -85,16 +85,20 @@ public class YahooHDFSLSTMVerify {
                 }
             }
 
+            INDArray input = Nd4j.create(crvector);
+            /*
             INDArray input = Nd4j.zeros(1, vecSize);
             for (int j = 0; j < vecSize; j++)
                 input.putScalar(new int[]{0, j}, crvector[j]);
-
+            */
             INDArray output = model.rnnTimeStep(input);
 
+            double[] outputVector = output.data().asDouble();
+            /*
             double[] outputVector = new double[vecSize];
             for (int j = 0; j < vecSize; j++)
                 outputVector[j] = output.getDouble(0, j);
-
+            */
             /*
                 iterate all words to get the prediction
              */
