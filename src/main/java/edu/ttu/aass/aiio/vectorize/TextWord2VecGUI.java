@@ -1,4 +1,4 @@
-package edu.ttu.aass.aiio.lstm;
+package edu.ttu.aass.aiio.vectorize;
 
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -14,25 +14,17 @@ import java.util.HashMap;
 /**
  * Created by daidong on 8/10/16.
  */
-public class TextLSTMGUI {
+public class TextWord2VecGUI {
 
-    private BufferedReader reader;
-    private MultiLayerNetwork model;
-    private String wordsequence;
     private String vectorizedFile;
     private int vecSize;
     private HashMap<ByteBuffer, double[]> vecs;
     private BufferedReader vectorReader;
 
-    public TextLSTMGUI(MultiLayerNetwork net, String file, String vecFile, int vecSize) throws IOException {
-        this.model = net;
-        this.wordsequence = file;
+    public TextWord2VecGUI(String vecFile, int vecSize) throws IOException {
         this.vectorizedFile = vecFile;
         this.vecSize = vecSize;
 
-        this.reader = new BufferedReader(new InputStreamReader(
-                new BufferedInputStream(
-                        new FileInputStream(this.wordsequence), 10 * 1024 * 1024)));
 
         this.vecs = new HashMap<>();
         this.vectorReader = new BufferedReader(new FileReader(vectorizedFile));
@@ -44,7 +36,6 @@ public class TextLSTMGUI {
                 vec[i] = Double.parseDouble(split[1 + i]);
             vecs.put(ByteBuffer.wrap(split[0].getBytes()), vec);
         }
-
     }
 
     private String ByteBuffer2String(ByteBuffer myByteBuffer){
@@ -60,11 +51,9 @@ public class TextLSTMGUI {
     }
 
     public String[] predictNext(String inputs, int number) throws IOException, NoSuchAlgorithmException {
-        this.model.rnnClearPreviousState();
-
         inputs = inputs.toLowerCase();
         String[] words = inputs.split(" ");
-        INDArray output = null;
+        String[] predictedWords = new String[number];
 
         for (String line : words){
             String currFile = line;
@@ -74,36 +63,31 @@ public class TextLSTMGUI {
             if (crvector == null)
                 continue;
 
-            INDArray input = Nd4j.create(crvector);
-            output = model.rnnTimeStep(input);
+            double[] outputVector = crvector;
 
-        }
-
-        double[] outputVector = output.data().asDouble();
-
-        String[] predictedWords = new String[number];
-        double[] distance = new double[number];
-        for (int j = 0; j < number; j++){
-            predictedWords[j] = "No Prediction";
-            distance[j] = Double.MAX_VALUE;
-        }
-
-        for (ByteBuffer word : this.vecs.keySet()){
-            double[] v = this.vecs.get(word);
-            double dist = 0;
-            for (int j = 0; j < vecSize; j++)
-                dist += (Math.abs(v[j] - outputVector[j]) * Math.abs(v[j] - outputVector[j]));
-            dist = Math.sqrt(dist);
-
+            double[] distance = new double[number];
             for (int j = 0; j < number; j++){
-                if (dist < distance[j]){
-                    for (int k = number - 1; k > j; k--) {
-                        distance[k] = distance[k-1];
-                        predictedWords[k] = predictedWords[k-1];
+                predictedWords[j] = "No Prediction";
+                distance[j] = Double.MAX_VALUE;
+            }
+
+            for (ByteBuffer word : this.vecs.keySet()){
+                double[] v = this.vecs.get(word);
+                double dist = 0;
+                for (int j = 0; j < vecSize; j++)
+                    dist += (Math.abs(v[j] - outputVector[j]) * Math.abs(v[j] - outputVector[j]));
+                dist = Math.sqrt(dist);
+
+                for (int j = 0; j < number; j++){
+                    if (dist < distance[j]){
+                        for (int k = number - 1; k > j; k--) {
+                            distance[k] = distance[k-1];
+                            predictedWords[k] = predictedWords[k-1];
+                        }
+                        distance[j] = dist;
+                        predictedWords[j] = ByteBuffer2String(word);
+                        break;
                     }
-                    distance[j] = dist;
-                    predictedWords[j] = ByteBuffer2String(word);
-                    break;
                 }
             }
         }
@@ -113,7 +97,7 @@ public class TextLSTMGUI {
 
     public void initGUI(){
         javax.swing.JFrame jf = new javax.swing.JFrame();
-        jf.setTitle("LSTM English Word Test");
+        jf.setTitle("Word2Vec English Word Test");
         jf.setSize(300,200);
         jf.setLocation(450,200);
         jf.setDefaultCloseOperation(3);
@@ -164,6 +148,11 @@ public class TextLSTMGUI {
             outputs += "</html>";
             jlaName.setText(outputs);
         }
+    }
+
+    public static void main(String[] args) throws IOException {
+        TextWord2VecGUI gui = new TextWord2VecGUI(args[0], 100);
+        gui.initGUI();
     }
     
 }

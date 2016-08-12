@@ -31,10 +31,10 @@ public class TextWord2Vec {
 		log.info("Traning model...");
 		Word2Vec vec = new Word2Vec.Builder()
 				.minWordFrequency(5)
-				.iterations(3)
+				.iterations(10)
 				.layerSize(100)
 				.seed(42)
-				.windowSize(10)
+				.windowSize(15)
 				.iterate(iter)
 				.tokenizerFactory(t)
 				.build();

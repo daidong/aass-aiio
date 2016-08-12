@@ -148,9 +148,10 @@ public class TextLSTM {
 
 		/**
 		 * Validate Prediction Accuracy
-		 */
+
 		TextLSTMVerify verify = new TextLSTMVerify(net, dataFile, vectorizedFile, vecSize);
 		verify.runVerify();
+		*/
 
 		TextLSTMGUI gui = new TextLSTMGUI(net, dataFile, vectorizedFile, vecSize);
 		gui.initGUI();
