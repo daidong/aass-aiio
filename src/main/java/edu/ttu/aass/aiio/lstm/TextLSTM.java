@@ -1,5 +1,6 @@
 package edu.ttu.aass.aiio.lstm;
 
+import edu.ttu.aass.aiio.dataspace.TextVectorIterator;
 import edu.ttu.aass.aiio.dataspace.YahooVectorIterator;
 import org.deeplearning4j.nn.api.Layer;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
@@ -7,7 +8,6 @@ import org.deeplearning4j.nn.conf.BackpropType;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
-import org.deeplearning4j.nn.conf.distribution.UniformDistribution;
 import org.deeplearning4j.nn.conf.layers.GravesLSTM;
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
@@ -22,15 +22,14 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Random;
 
 /**
  * Created by daidong on 8/8/16.
  * We are using GravesLSTM to test this system
  */
-public class YahooHDFSLSTM {
+public class TextLSTM {
 
-	public static YahooVectorIterator getYahooHDFSVectorizeIterator(
+	public static TextVectorIterator getTextVectorizeIterator(
 			String dataFile, String vectorizedFile, int miniBatchSize, int sequenceLength,
 			int vecSize) throws IOException {
 		File f1 = new File(dataFile);
@@ -39,16 +38,16 @@ public class YahooHDFSLSTM {
 			System.out.println("No data inputs or vectorlized data file");
 			System.exit(0);
 		}
-		return new YahooVectorIterator(dataFile, vectorizedFile, miniBatchSize, sequenceLength, vecSize);
+		return new TextVectorIterator(dataFile, vectorizedFile, miniBatchSize, sequenceLength, vecSize);
 	}
 
 	/**
 	 * @param args
 	 * @throws IOException
 	 *
-	 * args[0] = YahooHDFS Input Dataset
-	 * args[1] = YahooHDFS Vector Representation (from Word2Vec)
-	 * args[2] = YahooHDFS LSTM Network Serialization File
+	 * args[0] = Text8 Input Dataset
+	 * args[1] = Text8 Vector Representation (from Word2Vec)
+	 * args[2] = Text8 LSTM Network Serialization File
      */
 	public static void main(String args[]) throws IOException, NoSuchAlgorithmException {
 
@@ -71,7 +70,7 @@ public class YahooHDFSLSTM {
 		MultiLayerNetwork net = null;
 
 		if (!new File(lstmFile).exists()) {
-			YahooVectorIterator iter = getYahooHDFSVectorizeIterator(dataFile,
+			TextVectorIterator iter = getTextVectorizeIterator(dataFile,
 					vectorizedFile, miniBatchSize, exampleLength, vecSize);
 
 			int nOut = iter.totalOutcomes();
@@ -88,8 +87,8 @@ public class YahooHDFSLSTM {
 			 */
 			MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
 					.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-					.iterations(10)
-					.learningRate(0.01)
+					.iterations(1)
+					.learningRate(0.1)
 					.rmsDecay(0.95)
 					.seed(12345)
 					.regularization(true)
@@ -150,7 +149,10 @@ public class YahooHDFSLSTM {
 		/**
 		 * Validate Prediction Accuracy
 		 */
-		YahooHDFSLSTMVerify verify = new YahooHDFSLSTMVerify(net, dataFile, vectorizedFile, vecSize);
+		TextLSTMVerify verify = new TextLSTMVerify(net, dataFile, vectorizedFile, vecSize);
 		verify.runVerify();
+
+		TextLSTMGUI gui = new TextLSTMGUI(net, dataFile, vectorizedFile, vecSize);
+		gui.initGUI();
 	}
 }

@@ -2,6 +2,8 @@ package edu.ttu.aass.aiio;
 
 import edu.ttu.aass.aiio.dataspace.YahooHDFSIterator;
 import edu.ttu.aass.aiio.dataspace.YahooVectorIterator;
+import edu.ttu.aass.aiio.lstm.TextLSTM;
+import edu.ttu.aass.aiio.lstm.TextLSTMGUI;
 import org.nd4j.linalg.dataset.DataSet;
 
 import java.io.FileNotFoundException;
@@ -20,10 +22,12 @@ public class AIIOMain {
 		}
 		*/
 
+		/*
 		YahooVectorIterator iter2 = new YahooVectorIterator(args[0], args[1], 32, 1000, 100);
 		while (iter2.hasNext()){
 			DataSet ds = iter2.next();
 			System.out.println(ds.toString());
 		}
+		*/
 	}
 }
