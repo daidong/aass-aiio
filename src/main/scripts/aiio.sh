@@ -30,6 +30,7 @@ touch $LOG_PATH/stdout.log
 CLASS_NAME_AIIO=edu.ttu.aass.aiio.AIIOMain
 CLASS_NAME_WORD2VEC=edu.ttu.aass.aiio.vectorize.YahooHDFSFile2Vec
 CLASS_NAME_LSTM=edu.ttu.aass.aiio.lstm.YahooHDFSLSTM
+CLASS_NAME_TEXT_GUI=edu.ttu.aass.aiio.vectorize.TextWord2VecGUI
 
 CLASS_PATH=$PROCESSOR_HOME/conf
 #
@@ -56,4 +57,8 @@ fi
 
 if [ "LSTM" = $1 ]; then
 	java $PROGRAM_ARGS -classpath $CLASS_PATH $CLASS_NAME_LSTM ${@:2}
+fi
+
+if [ "W2VGUI" = $1 ]; then
+    java $PROGRAM_ARGS -classpath $CLASS_PATH $CLASS_NAME_TEXT_GUI ${@:2}
 fi

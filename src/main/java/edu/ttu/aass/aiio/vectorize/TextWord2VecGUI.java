@@ -1,5 +1,7 @@
 package edu.ttu.aass.aiio.vectorize;
 
+import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
+import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
@@ -19,22 +21,31 @@ public class TextWord2VecGUI {
     private String vectorizedFile;
     private int vecSize;
     private HashMap<ByteBuffer, double[]> vecs;
+    private WordVectors wordVectors;
     private BufferedReader vectorReader;
 
     public TextWord2VecGUI(String vecFile, int vecSize) throws IOException {
         this.vectorizedFile = vecFile;
-        this.vecSize = vecSize;
 
+        if (vecSize == 0) {
+            this.wordVectors = WordVectorSerializer.loadGoogleModel(new File(this.vectorizedFile), true, false);
+            this.vecSize = this.wordVectors.lookupTable().layerSize();
+            this.vecs = null;
 
-        this.vecs = new HashMap<>();
-        this.vectorReader = new BufferedReader(new FileReader(vectorizedFile));
-        String line;
-        while ((line = this.vectorReader.readLine()) != null){
-            String split[] = line.split(" ");
-            double[] vec = new double[this.vecSize];
-            for (int i = 0; i < this.vecSize; i++)
-                vec[i] = Double.parseDouble(split[1 + i]);
-            vecs.put(ByteBuffer.wrap(split[0].getBytes()), vec);
+        } else {
+            this.vecs = new HashMap<>();
+            this.vecSize = vecSize;
+            this.wordVectors = null;
+
+            this.vectorReader = new BufferedReader(new FileReader(vectorizedFile));
+            String line;
+            while ((line = this.vectorReader.readLine()) != null) {
+                String split[] = line.split(" ");
+                double[] vec = new double[this.vecSize];
+                for (int i = 0; i < this.vecSize; i++)
+                    vec[i] = Double.parseDouble(split[1 + i]);
+                vecs.put(ByteBuffer.wrap(split[0].getBytes()), vec);
+            }
         }
     }
 
@@ -57,36 +68,48 @@ public class TextWord2VecGUI {
 
         for (String line : words){
             String currFile = line;
-            ByteBuffer crbb = ByteBuffer.wrap(currFile.getBytes());
-            double[] crvector = this.vecs.get(crbb);
+            double[] crvector;
+
+            if (this.vecs != null)
+                crvector = this.vecs.get(ByteBuffer.wrap(currFile.getBytes()));
+            else
+                crvector = this.wordVectors.getWordVector(currFile);
 
             if (crvector == null)
                 continue;
 
-            double[] outputVector = crvector;
+            if (this.vecs == null){
+                int j = 0;
+                for (String p : this.wordVectors.wordsNearest(currFile, number))
+                    predictedWords[j++] = p;
 
-            double[] distance = new double[number];
-            for (int j = 0; j < number; j++){
-                predictedWords[j] = "No Prediction";
-                distance[j] = Double.MAX_VALUE;
-            }
+            } else {
 
-            for (ByteBuffer word : this.vecs.keySet()){
-                double[] v = this.vecs.get(word);
-                double dist = 0;
-                for (int j = 0; j < vecSize; j++)
-                    dist += (Math.abs(v[j] - outputVector[j]) * Math.abs(v[j] - outputVector[j]));
-                dist = Math.sqrt(dist);
+                double[] outputVector = crvector;
 
+                double[] distance = new double[number];
                 for (int j = 0; j < number; j++){
-                    if (dist < distance[j]){
-                        for (int k = number - 1; k > j; k--) {
-                            distance[k] = distance[k-1];
-                            predictedWords[k] = predictedWords[k-1];
+                    predictedWords[j] = "No Prediction";
+                    distance[j] = Double.MAX_VALUE;
+                }
+
+                for (ByteBuffer word : this.vecs.keySet()) {
+                    double[] v = this.vecs.get(word);
+                    double dist = 0;
+                    for (int j = 0; j < vecSize; j++)
+                        dist += (Math.abs(v[j] - outputVector[j]) * Math.abs(v[j] - outputVector[j]));
+                    dist = Math.sqrt(dist);
+
+                    for (int j = 0; j < number; j++) {
+                        if (dist < distance[j]) {
+                            for (int k = number - 1; k > j; k--) {
+                                distance[k] = distance[k - 1];
+                                predictedWords[k] = predictedWords[k - 1];
+                            }
+                            distance[j] = dist;
+                            predictedWords[j] = ByteBuffer2String(word);
+                            break;
                         }
-                        distance[j] = dist;
-                        predictedWords[j] = ByteBuffer2String(word);
-                        break;
                     }
                 }
             }
@@ -151,7 +174,7 @@ public class TextWord2VecGUI {
     }
 
     public static void main(String[] args) throws IOException {
-        TextWord2VecGUI gui = new TextWord2VecGUI(args[0], 100);
+        TextWord2VecGUI gui = new TextWord2VecGUI(args[0], 0);
         gui.initGUI();
     }
     

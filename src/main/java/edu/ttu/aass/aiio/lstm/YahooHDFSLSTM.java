@@ -85,7 +85,13 @@ public class YahooHDFSLSTM {
 			 * For LSTMs, use the softsign (not softmax) activation function over tanh (it’s faster and less prone to saturation (~0 gradients)).
 			 * In general, stacking layers can help.
 			 *
+			 * MSE + softmax is not appropriate for either classification or regression
+			 classification: MCXENT + softmax
+			 regression: MSE + identity
+			 also: no reason to mix softsign + tanh, use one or the other for both
 			 */
+
+			/*
 			MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
 					.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
 					.iterations(10)
@@ -105,6 +111,33 @@ public class YahooHDFSLSTM {
 							.build())
 					.layer(2, new RnnOutputLayer.Builder(LossFunctions.LossFunction.MSE)
 							.activation("softsign")
+							.nIn(lstmLayerSize)
+							.nOut(nOut)
+							.build())
+					.backpropType(BackpropType.TruncatedBPTT)
+					.tBPTTForwardLength(tbpttLength).tBPTTBackwardLength(tbpttLength)
+					.pretrain(false).backprop(true)
+					.build();
+			*/
+			MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+					.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+					.iterations(1)
+					.learningRate(0.0018)
+					.rmsDecay(0.95)
+					.seed(12345)
+					.regularization(true)
+					.l2(1e-5)
+					.weightInit(WeightInit.XAVIER)
+					.updater(Updater.RMSPROP)
+					.list()
+					.layer(0, new GravesLSTM.Builder().nIn(iter.inputColumns())
+							.nOut(lstmLayerSize)
+							.activation("softsign").build())
+					.layer(1, new GravesLSTM.Builder().nIn(lstmLayerSize).nOut(lstmLayerSize)
+							.activation("softsign")
+							.build())
+					.layer(2, new RnnOutputLayer.Builder(LossFunctions.LossFunction.MSE)
+							.activation("identity")
 							.nIn(lstmLayerSize)
 							.nOut(nOut)
 							.build())

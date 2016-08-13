@@ -57,12 +57,12 @@ public class TextLSTM {
 		String vectorizedFile = args[1];
 		String lstmFile = args[2];
 
-		int vecSize = 100; 							//Size of generated file vector. 100 by default
+		int vecSize = 300; 							//Size of generated file vector. 100 by default
 		/*
 			Codes from example
 		 */
 		int lstmLayerSize = 200;					//Number of units in each GravesLSTM layer
-		int miniBatchSize = 32;						//Size of mini batch to use when  training
+		int miniBatchSize = 50;						//Size of mini batch to use when  training
 		int exampleLength = 1000;					//Length of each training example sequence to use. This could certainly be increased
 		int tbpttLength = 50;                       //Length for truncated backpropagation through time. i.e., do parameter updates ever 50 characters
 		int numEpochs = 1;  						//Total number of training epochs
@@ -88,11 +88,11 @@ public class TextLSTM {
 			MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
 					.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
 					.iterations(1)
-					.learningRate(0.1)
+					.learningRate(0.0018)
 					.rmsDecay(0.95)
 					.seed(12345)
 					.regularization(true)
-					.l2(0.001)
+					.l2(1e-5)
 					.weightInit(WeightInit.XAVIER)
 					.updater(Updater.RMSPROP)
 					.list()
@@ -103,7 +103,7 @@ public class TextLSTM {
 							.activation("tanh")
 							.build())
 					.layer(2, new RnnOutputLayer.Builder(LossFunctions.LossFunction.MSE)
-							.activation("softsign")
+							.activation("identity")
 							.nIn(lstmLayerSize)
 							.nOut(nOut)
 							.build())
